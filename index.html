@@ -1,1 +1,455 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClassChat — Ton espace de classe</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --purple:#6d28d9;
+    --purple-light:#7c3aed;
+    --purple-pale:#ede9fe;
+    --purple-mid:#a78bfa;
+    --bg:#f0eeff;
+    --bg2:#faf9ff;
+    --white:#ffffff;
+    --text:#1e1b4b;
+    --muted:#6b7280;
+    --border:#e5e7eb;
+    --green:#10b981;
+    --red:#ef4444;
+  }
+  html,body{height:100%;font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;}
+  .app{display:grid;grid-template-columns:70px 300px 1fr;height:100vh;}
 
+  /* SIDEBAR */
+  .sidebar{background:#1e1b4b;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;}
+  .sb-logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:8px;}
+  .sb-divider{width:30px;height:1px;background:rgba(255,255,255,0.1);margin:6px 0;}
+  .sb-icon{width:46px;height:46px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:2px;border:none;background:transparent;transition:background 0.15s;}
+  .sb-icon:hover{background:rgba(255,255,255,0.08);}
+  .sb-icon.active{background:#3730a3;}
+  .sb-icon .si{font-size:20px;}
+  .sb-icon .sl{font-size:8px;color:#a5b4fc;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;}
+  .sb-icon.active .sl{color:white;}
+  .sb-bottom{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .sb-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#c4b5fd);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:white;cursor:pointer;border:2px solid #4f46e5;}
+  .sb-online{width:8px;height:8px;background:var(--green);border-radius:50%;border:2px solid #1e1b4b;}
+
+  /* PANEL */
+  .panel{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+  .panel-header{padding:16px 16px 12px;border-bottom:1px solid var(--border);}
+  .panel-title{font-size:18px;font-weight:900;color:var(--text);}
+  .panel-sub{font-size:11px;color:var(--muted);font-weight:600;margin-top:1px;}
+  .panel-user{display:flex;align-items:center;gap:10px;margin-top:12px;background:white;border-radius:14px;padding:10px 12px;border:1px solid var(--border);}
+  .pu-av{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#6d28d9,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:white;flex-shrink:0;}
+  .pu-name{font-size:13px;font-weight:800;color:var(--text);}
+  .pu-sub{font-size:11px;color:var(--muted);font-weight:600;}
+  .pu-btns{margin-left:auto;display:flex;gap:5px;}
+  .pu-btn{padding:5px 10px;border-radius:10px;font-size:11px;font-weight:700;border:1.5px solid var(--border);background:white;color:var(--muted);cursor:pointer;font-family:'Nunito',sans-serif;transition:all 0.15s;}
+  .pu-btn:hover{border-color:var(--purple-mid);color:var(--purple);}
+  .pu-btn.red{border-color:#fecaca;color:var(--red);}
+
+  .panel-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);}
+  .pa-card{background:white;border-radius:14px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;border:1.5px solid var(--border);transition:all 0.15s;}
+  .pa-card:hover{border-color:var(--purple-mid);box-shadow:0 4px 12px rgba(109,40,217,0.1);}
+  .pa-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .pa-icon.j{background:#ede9fe;}
+  .pa-icon.c{background:#fef9c3;}
+  .pa-label{font-size:13px;font-weight:800;color:var(--text);}
+  .pa-sub{font-size:10px;color:var(--muted);font-weight:600;}
+
+  .panel-scroll{flex:1;overflow-y:auto;padding:6px 10px 8px;}
+  .panel-scroll::-webkit-scrollbar{width:3px;}
+  .panel-scroll::-webkit-scrollbar-thumb{background:#d1c8f8;border-radius:4px;}
+
+  .sec-label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;padding:10px 6px 5px;}
+
+  .room-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;cursor:pointer;transition:background 0.12s;margin-bottom:2px;}
+  .room-item:hover,.room-item.active{background:var(--purple-pale);}
+  .r-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;flex-shrink:0;}
+  .ri-p{background:#ede9fe;color:#7c3aed;}
+  .ri-b{background:#dbeafe;color:#2563eb;}
+  .ri-g{background:#d1fae5;color:#059669;}
+  .ri-o{background:#ffedd5;color:#ea580c;}
+  .ri-pk{background:#fce7f3;color:#db2777;}
+  .r-name{font-size:13px;font-weight:800;color:var(--text);}
+  .r-sub{font-size:10px;color:var(--muted);font-weight:600;}
+  .r-priv{background:#f3f4f6;color:#9ca3af;font-size:9px;font-weight:700;border-radius:5px;padding:1px 5px;margin-left:4px;}
+  .r-unread{margin-left:auto;background:var(--purple-light);color:white;font-size:10px;font-weight:800;border-radius:10px;padding:2px 7px;}
+  .r-time{margin-left:auto;font-size:10px;color:var(--muted);}
+
+  .classe-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;cursor:pointer;transition:background 0.12s;margin-bottom:2px;}
+  .classe-row:hover{background:var(--purple-pale);}
+  .cpill{border-radius:8px;padding:3px 10px;font-size:12px;font-weight:800;flex-shrink:0;}
+  .c6{background:#dcfce7;color:#15803d;}
+  .c5{background:#fef9c3;color:#a16207;}
+  .c4{background:#dbeafe;color:#1d4ed8;}
+  .c3{background:#ffe4e6;color:#be123c;}
+  .c-name{font-size:13px;font-weight:800;}
+  .c-count{margin-left:auto;font-size:11px;color:var(--muted);font-weight:700;}
+
+  .panel-nav{border-top:1px solid var(--border);display:flex;background:white;flex-shrink:0;}
+  .pn-item{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;border:none;background:transparent;font-family:'Nunito',sans-serif;}
+  .pn-item .pi{font-size:20px;}
+  .pn-item .pl{font-size:8px;font-weight:800;color:var(--muted);text-transform:uppercase;}
+  .pn-item.active .pl{color:var(--purple);}
+  .pn-cam{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:22px;margin-top:-18px;box-shadow:0 4px 16px rgba(124,58,237,0.35);}
+
+  /* CHAT */
+  .chat{display:flex;flex-direction:column;background:white;overflow:hidden;}
+  .chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px;}
+  .ce-icon{width:80px;height:80px;border-radius:24px;background:var(--purple-pale);display:flex;align-items:center;justify-content:center;font-size:36px;}
+  .ce-title{font-size:22px;font-weight:900;color:var(--text);}
+  .ce-sub{font-size:14px;color:var(--muted);font-weight:600;text-align:center;max-width:280px;line-height:1.6;}
+
+  .chat-header{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .ch-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;flex-shrink:0;}
+  .ch-name{font-size:16px;font-weight:900;color:var(--text);}
+  .ch-sub{font-size:11px;color:var(--green);font-weight:700;}
+  .ch-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+  .ch-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:background 0.12s;}
+  .ch-btn:hover{background:var(--bg);}
+  .mbrs-pill{background:var(--purple-pale);color:var(--purple);font-size:11px;font-weight:800;border-radius:20px;padding:5px 11px;display:flex;align-items:center;gap:4px;}
+
+  .chat-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .ct{flex:1;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border:none;background:white;font-family:'Nunito',sans-serif;border-bottom:2px solid transparent;transition:border 0.15s;}
+  .ct.active{border-bottom-color:var(--purple-light);}
+  .ct .cti{font-size:18px;}
+  .ct .ctl{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;}
+  .ct.active .ctl{color:var(--purple);}
+
+  .messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px;}
+  .messages::-webkit-scrollbar{width:4px;}
+  .messages::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:4px;}
+
+  .msg{display:flex;gap:10px;align-items:flex-end;animation:msgIn 0.18s ease;}
+  @keyframes msgIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .msg.own{flex-direction:row-reverse;}
+  .m-av{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+  .m-body{max-width:58%;}
+  .m-sender{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px;padding:0 4px;}
+  .msg.own .m-sender{text-align:right;}
+  .bubble{padding:9px 14px;border-radius:18px;font-size:13px;line-height:1.5;word-break:break-word;}
+  .bubble.r{background:#f3f4f6;color:var(--text);border-bottom-left-radius:4px;}
+  .bubble.s{background:var(--purple-light);color:white;border-bottom-right-radius:4px;}
+  .m-time{font-size:9px;color:var(--muted);margin-top:3px;padding:0 4px;}
+  .msg.own .m-time{text-align:right;}
+  .sys-msg{text-align:center;font-size:11px;color:var(--muted);background:#f9fafb;border-radius:20px;padding:5px 14px;align-self:center;font-weight:700;}
+  .date-sep{text-align:center;font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:0.06em;align-self:center;background:var(--bg);border-radius:10px;padding:3px 12px;}
+
+  .input-bar{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;background:white;flex-shrink:0;}
+  .ib-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:background 0.12s;flex-shrink:0;}
+  .ib-btn:hover{background:var(--bg);}
+  .ib-btn.gif{font-size:11px;font-weight:800;color:var(--muted);}
+  .msg-input{flex:1;padding:10px 16px;border-radius:24px;border:1.5px solid var(--border);font-size:13px;font-family:'Nunito',sans-serif;outline:none;background:#f9fafb;color:var(--text);transition:all 0.15s;}
+  .msg-input:focus{border-color:var(--purple-mid);background:white;box-shadow:0 0 0 3px rgba(167,139,250,0.15);}
+  .send-btn{width:38px;height:38px;border-radius:50%;background:var(--purple-light);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;transition:all 0.15s;flex-shrink:0;}
+  .send-btn:hover{background:var(--purple);}
+  .send-btn:active{transform:scale(0.93);}
+
+  /* MODALS */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:200;}
+  .overlay.on{display:flex;}
+  .modal{background:white;border-radius:24px;padding:28px;width:360px;animation:mIn 0.2s ease;}
+  @keyframes mIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .m-title{font-size:20px;font-weight:900;color:var(--text);margin-bottom:5px;}
+  .m-sub{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:18px;}
+  .m-input{width:100%;padding:12px 16px;border-radius:14px;border:1.5px solid var(--border);font-size:15px;font-family:'Nunito',sans-serif;font-weight:700;outline:none;color:var(--text);transition:border 0.15s;}
+  .m-input:focus{border-color:var(--purple-mid);}
+  .m-code{letter-spacing:0.12em;text-align:center;}
+  .m-btns{display:flex;gap:10px;margin-top:14px;}
+  .m-btn{flex:1;padding:12px;border-radius:14px;font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;transition:all 0.15s;}
+  .m-btn.cancel{background:#f3f4f6;border:none;color:var(--muted);}
+  .m-btn.ok{background:var(--purple-light);border:none;color:white;}
+  .m-btn.ok:hover{background:var(--purple);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-logo">📚</div>
+    <div class="sb-divider"></div>
+    <button class="sb-icon active"><div class="si">💬</div><div class="sl">Groupes</div></button>
+    <button class="sb-icon"><div class="si">⭕</div><div class="sl">Stories</div></button>
+    <button class="sb-icon"><div class="si">📷</div><div class="sl">Photos</div></button>
+    <button class="sb-icon"><div class="si">🎮</div><div class="sl">Jeux</div></button>
+    <button class="sb-icon"><div class="si">🎵</div><div class="sl">Musique</div></button>
+    <button class="sb-icon"><div class="si">🏆</div><div class="sl">Concours</div></button>
+    <div class="sb-bottom">
+      <div class="sb-divider"></div>
+      <button class="sb-icon"><div class="si">⚙️</div><div class="sl">Réglages</div></button>
+      <div class="sb-avatar">LB</div>
+      <div class="sb-online"></div>
+    </div>
+  </div>
+
+  <!-- PANEL -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">📚 ClassChat</div>
+      <div class="panel-sub">Ton espace de classe</div>
+      <div class="panel-user">
+        <div class="pu-av">CC</div>
+        <div>
+          <div class="pu-name">Bon retour Lucien !</div>
+          <div class="pu-sub">Choisis ou crée une salle</div>
+        </div>
+        <div class="pu-btns">
+          <button class="pu-btn">Amis</button>
+          <button class="pu-btn">🛡️</button>
+          <button class="pu-btn red">Déco</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-actions">
+      <div class="pa-card" onclick="openJoin()">
+        <div class="pa-icon j">#</div>
+        <div><div class="pa-label">Rejoindre</div><div class="pa-sub">Avec un code</div></div>
+      </div>
+      <div class="pa-card" onclick="openCreate()">
+        <div class="pa-icon c">✦</div>
+        <div><div class="pa-label">Créer</div><div class="pa-sub">Nouvelle salle</div></div>
+      </div>
+    </div>
+
+    <div class="panel-scroll" id="roomsList">
+      <div class="sec-label">Mes salles récentes</div>
+      <div class="room-item active" id="ri-407" onclick="openRoom('407','18','ri-p')">
+        <div class="r-icon ri-p">#</div>
+        <div style="flex:1;min-width:0">
+          <div class="r-name">407 <span class="r-priv">Privé</span></div>
+          <div class="r-sub">407 · 3 min</div>
+        </div>
+        <div class="r-unread" id="u-407">18</div>
+      </div>
+      <div class="room-item" id="ri-406" onclick="openRoom('406','12','ri-b')">
+        <div class="r-icon ri-b">#</div>
+        <div style="flex:1;min-width:0">
+          <div class="r-name">406 <span class="r-priv">Privé</span></div>
+          <div class="r-sub">406 · 17 min</div>
+        </div>
+        <div class="r-time">12:07</div>
+      </div>
+
+      <div class="sec-label">Classes du collège</div>
+      <div class="classe-row" onclick="openRoom('6ème A','24','ri-g')">
+        <span class="cpill c6">6eme</span>
+        <span class="c-name" style="color:#15803d;">6eme</span>
+        <span class="c-count">11 classes ›</span>
+      </div>
+      <div class="classe-row" onclick="openRoom('5ème B','22','ri-o')">
+        <span class="cpill c5">5eme</span>
+        <span class="c-name" style="color:#a16207;">5eme</span>
+        <span class="c-count">11 classes ›</span>
+      </div>
+      <div class="classe-row" onclick="openRoom('4ème C','20','ri-b')">
+        <span class="cpill c4">4eme</span>
+        <span class="c-name" style="color:#1d4ed8;">4eme</span>
+        <span class="c-count">10 classes ›</span>
+      </div>
+      <div class="classe-row" onclick="openRoom('3ème D','19','ri-pk')">
+        <span class="cpill c3">3eme</span>
+        <span class="c-name" style="color:#be123c;">3eme</span>
+        <span class="c-count">9 classes ›</span>
+      </div>
+    </div>
+
+    <div class="panel-nav">
+      <button class="pn-item active"><div class="pi">💬</div><div class="pl">Groupes</div></button>
+      <button class="pn-item"><div class="pi">⭕</div><div class="pl">Stories</div></button>
+      <button class="pn-item"><div class="pn-cam">📷</div><div class="pl" style="margin-top:6px;"> </div></button>
+      <button class="pn-item"><div class="pi">🎮</div><div class="pl">Jeux</div></button>
+      <button class="pn-item"><div class="pi">🏆</div><div class="pl">Concours</div></button>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat">
+    <div class="chat-empty" id="chatEmpty">
+      <div class="ce-icon">💬</div>
+      <div class="ce-title">Choisis une salle</div>
+      <div class="ce-sub">Sélectionne une salle dans la liste ou crée-en une nouvelle pour commencer à chatter.</div>
+    </div>
+
+    <div class="chat-header" id="chatHeader" style="display:none">
+      <div class="ch-icon ri-p" id="chIcon">#</div>
+      <div>
+        <div class="ch-name" id="chName">407</div>
+        <div class="ch-sub" id="chSub">● 18 membres actifs</div>
+      </div>
+      <div class="ch-actions">
+        <div class="mbrs-pill" id="mbrsCount">💧 18</div>
+        <button class="ch-btn">🔍</button>
+        <button class="ch-btn">👥</button>
+        <button class="ch-btn">⚙️</button>
+      </div>
+    </div>
+
+    <div class="chat-tabs" id="chatTabs" style="display:none">
+      <button class="ct active"><div class="cti">🎮</div><div class="ctl">Jeux</div></button>
+      <button class="ct"><div class="cti">📞</div><div class="ctl">Appels</div></button>
+      <button class="ct"><div class="cti">✨</div><div class="ctl">Perso</div></button>
+      <button class="ct"><div class="cti">👥</div><div class="ctl">Membres</div></button>
+    </div>
+
+    <div class="messages" id="messages" style="display:none"></div>
+
+    <div class="input-bar" id="inputBar" style="display:none">
+      <button class="ib-btn">📎</button>
+      <button class="ib-btn gif">GIF</button>
+      <button class="ib-btn">😊</button>
+      <input class="msg-input" id="msgInput" placeholder="Message..." onkeydown="onKey(event)">
+      <button class="ib-btn">🎤</button>
+      <button class="send-btn" onclick="send()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REJOINDRE -->
+<div class="overlay" id="ovJoin">
+  <div class="modal">
+    <div class="m-title">Rejoindre une salle</div>
+    <div class="m-sub">Entre le code de la salle</div>
+    <input class="m-input m-code" id="joinCode" placeholder="ex: 407" maxlength="12">
+    <div class="m-btns">
+      <button class="m-btn cancel" onclick="closeAll()">Annuler</button>
+      <button class="m-btn ok" onclick="doJoin()">Rejoindre</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CRÉER -->
+<div class="overlay" id="ovCreate">
+  <div class="modal">
+    <div class="m-title">Créer une salle</div>
+    <div class="m-sub">Donne un nom à ta nouvelle salle</div>
+    <input class="m-input" id="createName" placeholder="Nom de la salle..." maxlength="20">
+    <div class="m-btns">
+      <button class="m-btn cancel" onclick="closeAll()">Annuler</button>
+      <button class="m-btn ok" onclick="doCreate()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function openRoom(name, members, iconCls) {
+  document.querySelectorAll('.room-item').forEach(r => r.classList.remove('active'));
+  const ri = $('ri-' + name);
+  if (ri) { ri.classList.add('active'); const u = $('u-' + name); if (u) u.remove(); }
+
+  $('chatEmpty').style.display = 'none';
+  $('chatHeader').style.display = 'flex';
+  $('chatTabs').style.display = 'flex';
+  $('messages').style.display = 'flex';
+  $('inputBar').style.display = 'flex';
+
+  const icon = $('chIcon');
+  icon.className = 'ch-icon ' + iconCls;
+  icon.textContent = name.slice(0,3);
+  $('chName').textContent = 'Salle ' + name;
+  $('chSub').textContent = '● ' + members + ' membres actifs';
+  $('mbrsCount').textContent = '💧 ' + members;
+
+  $('messages').innerHTML = '';
+  addDate('Aujourd\'hui');
+  addSys('Tu as rejoint la salle #' + name);
+  $('msgInput').focus();
+}
+
+function addDate(t) {
+  const d = document.createElement('div');
+  d.className = 'date-sep'; d.textContent = t;
+  $('messages').appendChild(d);
+}
+function addSys(t) {
+  const d = document.createElement('div');
+  d.className = 'sys-msg'; d.textContent = t;
+  $('messages').appendChild(d);
+  scroll();
+}
+function addMsg(av, bg, color, name, text, own) {
+  const now = new Date();
+  const t = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  const div = document.createElement('div');
+  div.className = 'msg' + (own ? ' own' : '');
+  if (own) {
+    div.innerHTML = `<div class="m-av" style="background:#ede9fe;color:#7c3aed;">LB</div>
+      <div class="m-body">
+        <div class="m-sender">Moi</div>
+        <div class="bubble s">${esc(text)}</div>
+        <div class="m-time">${t}</div>
+      </div>`;
+  } else {
+    div.innerHTML = `<div class="m-av" style="background:${bg};color:${color};">${av}</div>
+      <div class="m-body">
+        <div class="m-sender">${name}</div>
+        <div class="bubble r">${esc(text)}</div>
+        <div class="m-time">${t}</div>
+      </div>`;
+  }
+  $('messages').appendChild(div);
+  scroll();
+}
+function esc(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function scroll() { const m = $('messages'); m.scrollTop = m.scrollHeight; }
+
+function onKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }
+function send() {
+  const inp = $('msgInput');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  addMsg(null,null,null,null,txt,true);
+  inp.value = '';
+}
+
+function openJoin() { $('ovJoin').classList.add('on'); setTimeout(()=>$('joinCode').focus(),50); }
+function openCreate() { $('ovCreate').classList.add('on'); setTimeout(()=>$('createName').focus(),50); }
+function closeAll() { $('ovJoin').classList.remove('on'); $('ovCreate').classList.remove('on'); }
+$('ovJoin').addEventListener('click', e => { if (e.target === $('ovJoin')) closeAll(); });
+$('ovCreate').addEventListener('click', e => { if (e.target === $('ovCreate')) closeAll(); });
+
+function doJoin() {
+  const code = $('joinCode').value.trim();
+  if (!code) return;
+  closeAll();
+  $('joinCode').value = '';
+  addRoomToList(code, 'ri-p');
+  openRoom(code, Math.floor(Math.random()*20+3), 'ri-p');
+  addSys('Tu as rejoint la salle #' + code + ' avec succès !');
+}
+function doCreate() {
+  const name = $('createName').value.trim();
+  if (!name) return;
+  closeAll();
+  $('createName').value = '';
+  addRoomToList(name, 'ri-p');
+  openRoom(name, 1, 'ri-p');
+  addSys('🎉 Salle "' + name + '" créée ! Partage le code avec tes amis.');
+}
+function addRoomToList(name, cls) {
+  const list = $('roomsList');
+  const item = document.createElement('div');
+  item.className = 'room-item';
+  item.id = 'ri-' + name;
+  item.innerHTML = `<div class="r-icon ${cls}">#</div>
+    <div style="flex:1;min-width:0">
+      <div class="r-name">${esc(name)} <span class="r-priv">Privé</span></div>
+      <div class="r-sub">${esc(name)} · maintenant</div>
+    </div>`;
+  item.onclick = () => openRoom(name, 1, cls);
+  const sep = list.querySelector('.sec-label');
+  sep.after(item);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+</script>
+</body>
+</html>
